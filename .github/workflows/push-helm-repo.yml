@@ -28,6 +28,20 @@ jobs:
         with:
           version: v3.10.0
 
+      # chart-releaser wants files to not be in the root of the repo
+      # but we want to maintain mergeability with upstream, so we do this
+      # here in the action before we run chart-releaser
+      - name: Move files into a charts subdirectory
+        run: |
+          mkdir -p charts/mastodon
+          git mv templates *.yaml README.md LICENSE charts/mastodon
+          cd charts/mastodon
+          helm repo add bitnami https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+          helm dependency update
+          cd ../..
+          git add .
+          git commit -m "Move files into charts subdirectory"
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
         env:
